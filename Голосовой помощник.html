@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Умный голосовой помощник</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #5e35b1;
+            --accent-color: #7c4dff;
+            --text-color: #f5f5f5;
+            --bg-color: #121212;
+            --card-color: rgba(30, 30, 46, 0.8);
+            --border-color: rgba(124, 77, 255, 0.3);
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #533d7b);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            width: 95%;
+            max-width: 1400px;
+            height: 95vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--card-color);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            opacity: 0.5;
+        }
+        
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .chat-section {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .chat-area {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+            position: relative;
+            word-break: break-word;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background: var(--accent-color);
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 2px 8px rgba(124, 77, 255, 0.3);
+        }
+        
+        .assistant-message {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            align-self: flex-start;
+            margin-bottom: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+        
+        .input-area {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            border-top: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-container {
+            width: 100%;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #textInput {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            font-family: 'Roboto', sans-serif;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        #textInput:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(124, 77, 255, 0.2);
+        }
+        
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(124, 77, 255, 0.3);
+        }
+        
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(124, 77, 255, 0.4);
+        }
+        
+        .mic-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(124, 77, 255, 0.3);
+        }
+        
+        .mic-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(124, 77, 255, 0.4);
+        }
+        
+        .mic-btn.active {
+            animation: pulse 1.5s infinite;
+            background: #ff3d71;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 61, 113, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 61, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 61, 113, 0); }
+        }
+        
+        .waves {
+            display: none;
+            gap: 4px;
+            height: 32px;
+            align-items: flex-end;
+        }
+        
+        .wave {
+            width: 5px;
+            height: 10px;
+            background: var(--accent-color);
+            border-radius: 3px;
+            animation: wave 1.5s infinite ease-in-out;
+        }
+        
+        .wave:nth-child(1) { animation-delay: 0.1s; }
+        .wave:nth-child(2) { animation-delay: 0.3s; }
+        .wave:nth-child(3) { animation-delay: 0.5s; }
+        .wave:nth-child(4) { animation-delay: 0.7s; }
+        .wave:nth-child(5) { animation-delay: 0.9s; }
+        
+        @keyframes wave {
+            0%, 100% { height: 10px; }
+            50% { height: 25px; }
+        }
+        
+        .multi-window-section {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+        
+        .main-window {
+            flex: 0.7;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .secondary-windows {
+            flex: 0.3;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .window {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+        
+        .window-header {
+            font-weight: 500;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .file-item, .folder-item {
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-item:hover, .folder-item:hover {
+            background: rgba(124, 77, 255, 0.2);
+            transform: translateX(5px);
+        }
+        
+        .folder-contents {
+            margin-left: 20px;
+            display: none;
+        }
+        
+        .folder-contents.expanded {
+            display: block;
+        }
+        
+        .folder-toggle {
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .folder-toggle.expanded {
+            transform: rotate(90deg);
+        }
+        
+        .notes-area {
+            height: 200px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-family: 'Roboto', sans-serif;
+            resize: none;
+            outline: none;
+        }
+        
+        .notes-save-btn {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .notes-save-btn:hover {
+            background: #7c4dff;
+            transform: translateY(-2px);
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 61, 113, 0.3);
+        }
+        
+        .clear-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .clear-btn:hover {
+            background: rgba(255, 61, 113, 0.3);
+        }
+        
+        .file-explorer {
+            display: none;
+        }
+        
+        .notes-explorer {
+            display: none;
+        }
+        
+        .entertainment-explorer {
+            display: none;
+        }
+        
+        .settings-explorer {
+            display: none;
+        }
+        
+        .active-window {
+            display: block;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .file-action-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .file-action-btn:hover {
+            background: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        
+        .drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            margin: 15px 0;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        
+        .drop-zone.highlight {
+            border-color: var(--accent-color);
+            background: rgba(124, 77, 255, 0.1);
+        }
+        
+        .file-preview {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .file-preview.active {
+            display: block;
+        }
+        
+        .file-preview-content {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .setting-item {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .setting-label {
+            display: block;
+            margin-bottom: 5px;
+            flex: 1;
+        }
+        
+        .setting-control {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-color);
+        }
+        
+        .setting-icon {
+            width: 24px;
+            text-align: center;
+            color: var(--accent-color);
+        }
+        
+        .recommendations {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        
+        .recommendation-item {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        
+        .recommendation-item:hover {
+            color: var(--accent-color);
+        }
+        
+        .chat-tabs {
+            display: flex;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            gap: 5px;
+            overflow-x: auto;
+        }
+        
+        .chat-tab {
+            padding: 5px 10px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .chat-tab.active {
+            background: var(--accent-color);
+        }
+        
+        .chat-tab-close {
+            margin-left: 5px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        
+        .new-chat-btn {
+            padding: 5px 10px;
+            border-radius: 15px;
+            background: rgba(124, 77, 255, 0.3);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .new-chat-btn:hover {
+            background: rgba(124, 77, 255, 0.5);
+        }
+        
+        .noise-suppression-indicator {
+            position: absolute;
+            top: 10px;
+            right: 80px;
+            font-size: 0.8rem;
+            background: rgba(0, 200, 0, 0.2);
+            padding: 3px 8px;
+            border-radius: 15px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .chat-section {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            
+            .multi-window-section {
+                flex-direction: column;
+                height: 400px;
+            }
+            
+            .main-window, .secondary-windows {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            Умный голосовой помощник
+            <button class="clear-btn" id="clearBtn">Очистить чат</button>
+            <div class="noise-suppression-indicator" id="noiseSuppressionIndicator">
+                <i class="fas fa-microphone-slash"></i> Шумоподавление
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="chat-section">
+                <div class="chat-tabs" id="chatTabs">
+                    <div class="new-chat-btn" id="newChatBtn">
+                        <i class="fas fa-plus"></i> Новый чат
+                    </div>
+                </div>
+                
+                <div class="chat-area" id="chatArea">
+                </div>
+                
+                <div class="input-area">
+                    <div class="input-container">
+                        <input type="text" id="textInput" placeholder="Введите ваш вопрос...">
+                        <button class="send-btn" id="sendBtn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="waves" id="waves">
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                    </div>
+                    
+                    <button class="mic-btn" id="micBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="multi-window-section">
+                <div class="main-window">
+                    <div class="window" id="mainWindow">
+                        <div class="window-header"><i class="fas fa-home"></i> Главное окно</div>
+                        <div id="mainContent"></div>
+                        <div class="recommendations" id="recommendations">
+                            <div class="window-header"><i class="fas fa-history"></i> Рекомендации</div>
+                            <div id="recommendationsList"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="secondary-windows">
+                    <div class="window file-explorer" id="fileExplorer">
+                        <div class="window-header"><i class="fas fa-folder"></i> Файлы и папки</div>
+                        <div class="drop-zone" id="dropZone">
+                            Перетащите файлы или папки сюда или выберите из проводника
+                        </div>
+                        <div id="fileExplorerContent"></div>
+                        <div class="file-actions">
+                            <button class="file-action-btn" id="openInExplorerBtn"><i class="fas fa-folder-open"></i> Открыть</button>
+                            <button class="file-action-btn" id="deleteFileBtn"><i class="fas fa-trash"></i> Удалить</button>
+                            <button class="file-action-btn" id="renameFileBtn"><i class="fas fa-edit"></i> Переименовать</button>
+                            <button class="file-action-btn" id="browseFilesBtn"><i class="fas fa-folder"></i> Проводник</button>
+                            <button class="file-action-btn" id="refreshFilesBtn"><i class="fas fa-sync"></i> Обновить</button>
+                        </div>
+                        <div class="file-preview" id="filePreview">
+                            <div class="window-header"><i class="fas fa-file-alt"></i> Просмотр файла</div>
+                            <div class="file-preview-content" id="filePreviewContent"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="window notes-explorer" id="notesExplorer">
+                        <div class="window-header"><i class="fas fa-sticky-note"></i> Заметки</div>
+                        <textarea class="notes-area" id="notesArea" placeholder="Введите ваши заметки здесь..."></textarea>
+                        <button class="notes-save-btn" id="notesSaveBtn"><i class="fas fa-save"></i> Сохранить</button>
+                    </div>
+                    
+                    <div class="window entertainment-explorer" id="entertainmentExplorer">
+                        <div class="window-header"><i class="fas fa-gamepad"></i> Развлечения</div>
+                        <button class="notes-save-btn" id="guessMelodyBtn"><i class="fas fa-music"></i> Угадай мелодию</button>
+                        <button class="notes-save-btn" id="fortuneBtn"><i class="fas fa-crystal-ball"></i> Погадать</button>
+                        <button class="notes-save-btn" id="toastBtn"><i class="fas fa-glass-cheers"></i> Найти тост</button>
+                        <button class="notes-save-btn" id="poemBtn"><i class="fas fa-book"></i> Прочитать стих</button>
+                    </div>
+                    
+                    <div class="window settings-explorer" id="settingsExplorer">
+                        <div class="window-header"><i class="fas fa-cog"></i> Настройки</div>
+                        <div class="setting-item">
+                            <div class="setting-icon"><i class="fas fa-volume-up"></i></div>
+                            <div class="setting-label">
+                                <label>Громкость голоса:</label>
+                                <input type="range" class="setting-control" id="volumeControl" min="0" max="1" step="0.1">
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            <div class="setting-label">
+                                <label>Скорость речи:</label>
+                                <input type="range" class="setting-control" id="rateControl" min="0.5" max="2" step="0.1" value="1">
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-icon"><i class="fas fa-moon"></i></div>
+                            <div class="setting-label">
+                                <label>Темная тема:</label>
+                                <input type="checkbox" class="setting-control" id="themeControl" checked>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-icon"><i class="fas fa-microphone-slash"></i></div>
+                            <div class="setting-label">
+                                <label>Шумоподавление:</label>
+                                <input type="checkbox" class="setting-control" id="noiseSuppressionControl">
+                            </div>
+                        </div>
+                        <button class="notes-save-btn" id="saveSettingsBtn"><i class="fas fa-save"></i> Сохранить настройки</button>
+                    </div>
+                    
+                    <button class="back-btn" id="backBtn">Назад</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatArea = document.getElementById('chatArea');
+        const micBtn = document.getElementById('micBtn');
+        const waves = document.getElementById('waves');
+        const textInput = document.getElementById('textInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const backBtn = document.getElementById('backBtn');
+        const fileExplorer = document.getElementById('fileExplorer');
+        const fileExplorerContent = document.getElementById('fileExplorerContent');
+        const notesExplorer = document.getElementById('notesExplorer');
+        const notesArea = document.getElementById('notesArea');
+        const notesSaveBtn = document.getElementById('notesSaveBtn');
+        const entertainmentExplorer = document.getElementById('entertainmentExplorer');
+        const settingsExplorer = document.getElementById('settingsExplorer');
+        const openInExplorerBtn = document.getElementById('openInExplorerBtn');
+        const deleteFileBtn = document.getElementById('deleteFileBtn');
+        const renameFileBtn = document.getElementById('renameFileBtn');
+        const browseFilesBtn = document.getElementById('browseFilesBtn');
+        const refreshFilesBtn = document.getElementById('refreshFilesBtn');
+        const guessMelodyBtn = document.getElementById('guessMelodyBtn');
+        const fortuneBtn = document.getElementById('fortuneBtn');
+        const toastBtn = document.getElementById('toastBtn');
+        const poemBtn = document.getElementById('poemBtn');
+        const dropZone = document.getElementById('dropZone');
+        const volumeControl = document.getElementById('volumeControl');
+        const rateControl = document.getElementById('rateControl');
+        const themeControl = document.getElementById('themeControl');
+        const noiseSuppressionControl = document.getElementById('noiseSuppressionControl');
+        const noiseSuppressionIndicator = document.getElementById('noiseSuppressionIndicator');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const filePreview = document.getElementById('filePreview');
+        const filePreviewContent = document.getElementById('filePreviewContent');
+        const mainContent = document.getElementById('mainContent');
+        const recommendationsList = document.getElementById('recommendationsList');
+        const chatTabs = document.getElementById('chatTabs');
+        const newChatBtn = document.getElementById('newChatBtn');
+        
+        let isListening = false;
+        let isAssistantSpeaking = false;
+        let recognition;
+        let typingInterval;
+        let isTyping = false;
+        let conversationHistory = [];
+        let inactivityTimer;
+        let currentWindow = null;
+        let selectedFile = null;
+        let fileHandles = new Map();
+        let lastSpokenMessage = '';
+        let recentFiles = [];
+        let activeChatId = 'default';
+        let chats = {
+            'default': {
+                history: [],
+                notes: ''
+            }
+        };
+        let noiseSuppressionEnabled = false;
+        const OPENAI_API_KEY = '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';
+        
+        const poems = [
+            "Я помню чудное мгновенье...",
+            "Люблю грозу в начале мая...",
+            "Белеет парус одинокий...",
+            "У лукоморья дуб зеленый..."
+        ];
+        
+        const toasts = [
+            "За ваше здоровье и счастье!",
+            "Пусть удача всегда будет с вами!",
+            "За любовь, дружбу и взаимопонимание!",
+            "Пусть сбудутся все ваши мечты!"
+        ];
+        
+        const fortunes = [
+            "Вас ждет приятный сюрприз на этой неделе",
+            "Будьте осторожны в финансовых вопросах",
+            "Встреча с старым другом изменит вашу жизнь",
+            "Удача на вашей стороне, действуйте смело"
+        ];
+        
+        const fileIcons = {
+            'txt': '📄', 'doc': '📄', 'docx': '📄', 'rtf': '📄', 'pdf': '📕', 'wpd': '📄',
+            'ppt': '📊', 'pptx': '📊', 'xls': '📊', 'xlsx': '📊', 'csv': '📊',
+            'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'heif': '🖼️', 'webp': '🖼️',
+            'aac': '🎵', 'mp3': '🎵', 'wav': '🎵', 'ogg': '🎵', 'flac': '🎵',
+            'amv': '🎬', 'mpeg': '🎬', 'flv': '🎬', 'avi': '🎬', 'mp4': '🎬', 'mov': '🎬',
+            'c': '💻', 'java': '💻', 'py': '💻', 'js': '💻', 'cpp': '💻', 'html': '🌐', 'css': '🌐',
+            'iso': '🗄️', 'rar': '🗄️', 'tar': '🗄️', '7z': '🗄️', 'zip': '🗄️',
+            'exe': '⚙️', 'msi': '⚙️', 'bat': '⚙️', 'lnk': '🔗'
+        };
+        
+        const fileTypes = {
+            'txt': 'текстовый файл', 'doc': 'документ Word', 'docx': 'документ Word', 
+            'rtf': 'форматированный текст', 'pdf': 'PDF документ', 'wpd': 'документ WordPerfect',
+            'ppt': 'презентация PowerPoint', 'pptx': 'презентация PowerPoint', 
+            'xls': 'таблица Excel', 'xlsx': 'таблица Excel', 'csv': 'таблица CSV',
+            'jpg': 'изображение JPEG', 'jpeg': 'изображение JPEG', 'png': 'изображение PNG', 
+            'gif': 'изображение GIF', 'heif': 'изображение HEIF', 'webp': 'изображение WebP',
+            'aac': 'аудио файл', 'mp3': 'аудио файл', 'wav': 'аудио файл', 
+            'ogg': 'аудио файл', 'flac': 'аудио файл',
+            'amv': 'видео файл', 'mpeg': 'видео файл', 'flv': 'видео файл', 
+            'avi': 'видео файл', 'mp4': 'видео файл', 'mov': 'видео файл',
+            'c': 'исходный код C', 'java': 'исходный код Java', 'py': 'исходный код Python', 
+            'js': 'исходный код JavaScript', 'cpp': 'исходный код C++', 
+            'html': 'веб-страница', 'css': 'стили CSS',
+            'iso': 'образ диска', 'rar': 'архив RAR', 'tar': 'архив TAR', 
+            '7z': 'архив 7z', 'zip': 'архив ZIP',
+            'exe': 'исполняемый файл', 'msi': 'установщик', 'bat': 'пакетный файл', 
+            'lnk': 'ярлык'
+        };
+        
+        function initApp() {
+            initVoiceRecognition();
+            setupEventListeners();
+            loadAllData();
+            startInactivityTimer();
+            
+            openFileExplorer();
+            renderChatTabs();
+            
+            if (chats[activeChatId].history.length === 0) {
+                setTimeout(() => {
+                    const welcomeMessage = 'Привет! Я ваш умный голосовой помощник. Доступ к файлам и папкам уже открыт. Вы можете просматривать их здесь или сказать название файла или папки для открытия.';
+                    addMessage('assistant', welcomeMessage, true);
+                    speak(welcomeMessage);
+                }, 1000);
+            }
+            
+            document.addEventListener('keydown', handleHotkeys);
+        }
+        
+        function loadAllData() {
+            const savedChats = localStorage.getItem('chatSessions');
+            if (savedChats) {
+                chats = JSON.parse(savedChats);
+            }
+            
+            if (!chats[activeChatId]) {
+                chats[activeChatId] = {
+                    history: [],
+                    notes: ''
+                };
+            }
+            
+            conversationHistory = chats[activeChatId].history;
+            notesArea.value = chats[activeChatId].notes;
+            
+            loadSettings();
+            loadRecentFiles();
+        }
+        
+        function saveAllData() {
+            chats[activeChatId].history = conversationHistory;
+            chats[activeChatId].notes = notesArea.value;
+            localStorage.setItem('chatSessions', JSON.stringify(chats));
+        }
+        
+        function renderChatTabs() {
+            chatTabs.innerHTML = '';
+            
+            Object.keys(chats).forEach(chatId => {
+                const tab = document.createElement('div');
+                tab.className = `chat-tab ${chatId === activeChatId ? 'active' : ''}`;
+                tab.textContent = `Чат ${chatId === 'default' ? '1' : Object.keys(chats).indexOf(chatId) + 1}`;
+                tab.onclick = () => switchChat(chatId);
+                
+                if (chatId !== 'default') {
+                    const closeBtn = document.createElement('span');
+                    closeBtn.className = 'chat-tab-close';
+                    closeBtn.innerHTML = '&times;';
+                    closeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        closeChat(chatId);
+                    };
+                    tab.appendChild(closeBtn);
+                }
+                
+                chatTabs.appendChild(tab);
+            });
+            
+            chatTabs.appendChild(newChatBtn);
+        }
+        
+        function switchChat(chatId) {
+            activeChatId = chatId;
+            conversationHistory = chats[chatId].history;
+            notesArea.value = chats[chatId].notes;
+            renderConversation();
+            renderChatTabs();
+        }
+        
+        function createNewChat() {
+            const newChatId = 'chat-' + Date.now();
+            chats[newChatId] = {
+                history: [],
+                notes: ''
+            };
+            activeChatId = newChatId;
+            conversationHistory = [];
+            notesArea.value = '';
+            renderConversation();
+            renderChatTabs();
+            
+            setTimeout(() => {
+                const welcomeMessage = 'Привет! Это новый чат. Чем могу помочь?';
+                addMessage('assistant', welcomeMessage, true);
+                speak(welcomeMessage);
+            }, 500);
+        }
+        
+        function closeChat(chatId) {
+            if (Object.keys(chats).length <= 1) return;
+            
+            if (confirm('Вы уверены, что хотите закрыть этот чат? История будет удалена.')) {
+                delete chats[chatId];
+                
+                const remainingChatIds = Object.keys(chats);
+                activeChatId = remainingChatIds[0];
+                conversationHistory = chats[activeChatId].history;
+                notesArea.value = chats[activeChatId].notes;
+                
+                saveAllData();
+                renderConversation();
+                renderChatTabs();
+            }
+        }
+        
+        function handleHotkeys(e) {
+            if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                textInput.focus();
+            }
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                toggleVoiceRecognition();
+            }
+            if (e.ctrlKey && e.key === 'Enter' && textInput.value.trim()) {
+                e.preventDefault();
+                processUserInput(textInput.value);
+                textInput.value = '';
+            }
+            if (e.ctrlKey && e.key === 'ArrowUp') {
+                e.preventDefault();
+                openFileExplorer();
+            }
+            if (e.ctrlKey && e.key === 'ArrowDown') {
+                e.preventDefault();
+                openNotesExplorer();
+            }
+            if (e.ctrlKey && e.key === 'ArrowLeft') {
+                e.preventDefault();
+                openEntertainmentExplorer();
+            }
+            if (e.ctrlKey && e.key === 'ArrowRight') {
+                e.preventDefault();
+                openSettingsExplorer();
+            }
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                createNewChat();
+            }
+        }
+        
+        function startInactivityTimer() {
+            resetInactivityTimer();
+            
+            ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+                document.addEventListener(event, resetInactivityTimer);
+            });
+        }
+        
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                if (isListening) {
+                    recognition.stop();
+                }
+                speak('Я отключаюсь из-за неактивности. Для продолжения работы просто начните новый диалог.');
+            }, 7200000);
+        }
+        
+        function loadRecentFiles() {
+            const savedFiles = localStorage.getItem('recentFiles');
+            if (savedFiles) {
+                recentFiles = JSON.parse(savedFiles);
+                updateRecommendations();
+            }
+        }
+        
+        function saveRecentFiles() {
+            localStorage.setItem('recentFiles', JSON.stringify(recentFiles));
+        }
+        
+        function addToRecentFiles(file) {
+            const existingIndex = recentFiles.findIndex(f => f.path === file.path);
+            if (existingIndex !== -1) {
+                recentFiles.splice(existingIndex, 1);
+            }
+            recentFiles.unshift(file);
+            if (recentFiles.length > 5) {
+                recentFiles.pop();
+            }
+            saveRecentFiles();
+            updateRecommendations();
+        }
+        
+        function updateRecommendations() {
+            recommendationsList.innerHTML = '';
+            recentFiles.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'recommendation-item';
+                const extension = file.name.split('.').pop().toLowerCase();
+                const icon = fileIcons[extension] || '📄';
+                item.innerHTML = `${icon} ${file.name}`;
+                item.onclick = async () => {
+                    selectedFile = file;
+                    await openSelectedFile();
+                };
+                recommendationsList.appendChild(item);
+            });
+        }
+        
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('appSettings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                volumeControl.value = settings.volume || 1;
+                rateControl.value = settings.rate || 1;
+                themeControl.checked = settings.darkTheme !== false;
+                noiseSuppressionControl.checked = settings.noiseSuppression || false;
+                noiseSuppressionEnabled = settings.noiseSuppression || false;
+                updateNoiseSuppressionIndicator();
+                applyTheme(settings.darkTheme !== false);
+            }
+        }
+        
+        function saveSettings() {
+            const settings = {
+                volume: parseFloat(volumeControl.value),
+                rate: parseFloat(rateControl.value),
+                darkTheme: themeControl.checked,
+                noiseSuppression: noiseSuppressionControl.checked
+            };
+            
+            noiseSuppressionEnabled = noiseSuppressionControl.checked;
+            updateNoiseSuppressionIndicator();
+            
+            localStorage.setItem('appSettings', JSON.stringify(settings));
+            speak('Настройки сохранены.');
+        }
+        
+        function updateNoiseSuppressionIndicator() {
+            if (noiseSuppressionEnabled) {
+                noiseSuppressionIndicator.style.display = 'block';
+            } else {
+                noiseSuppressionIndicator.style.display = 'none';
+            }
+        }
+        
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.documentElement.style.setProperty('--bg-color', '#121212');
+                document.documentElement.style.setProperty('--text-color', '#f5f5f5');
+            } else {
+                document.documentElement.style.setProperty('--bg-color', '#f5f5f5');
+                document.documentElement.style.setProperty('--text-color', '#121212');
+            }
+        }
+        
+        function renderConversation() {
+            chatArea.innerHTML = '';
+            conversationHistory.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(`${msg.sender}-message`);
+                
+                const formattedText = msg.text.split('\n').map(paragraph => {
+                    return paragraph.trim() ? `<p>${paragraph}</p>` : '';
+                }).join('');
+                
+                messageDiv.innerHTML = formattedText;
+                chatArea.appendChild(messageDiv);
+            });
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+        
+        function initVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.lang = 'ru-RU';
+                recognition.interimResults = false;
+                recognition.continuous = false;
+                recognition.maxAlternatives = 3;
+                
+                if (noiseSuppressionEnabled) {
+                    recognition.continuous = false;
+                    recognition.interimResults = false;
+                }
+                
+                recognition.onstart = () => {
+                    isListening = true;
+                    micBtn.classList.add('active');
+                    waves.style.display = 'flex';
+                    animateWaves();
+                };
+                
+                recognition.onresult = (event) => {
+                    const result = event.results[0];
+                    const transcript = result[0].transcript.trim();
+                    
+                    let finalTranscript = transcript;
+                    if (result.isFinal && result.length > 1) {
+                        const alternatives = Array.from(result).map(alt => ({
+                            text: alt.transcript,
+                            confidence: alt.confidence
+                        }));
+                        
+                        alternatives.sort((a, b) => b.confidence - a.confidence);
+                        finalTranscript = alternatives[0].text;
+                    }
+                    
+                    addMessage('user', finalTranscript);
+                    processUserInput(finalTranscript);
+                };
+                
+                recognition.onerror = (event) => {
+                    console.error('Ошибка распознавания:', event.error);
+                    addMessage('assistant', 'Не удалось распознать речь. Попробуйте ещё раз.', false);
+                    resetVoiceRecognition();
+                };
+                
+                recognition.onend = () => {
+                    resetVoiceRecognition();
+                };
+            } else {
+                addMessage('assistant', 'Ваш браузер не поддерживает голосовое распознавание. Пожалуйста, используйте Chrome или Edge.', true);
+                micBtn.disabled = true;
+            }
+        }
+        
+        function setupEventListeners() {
+            micBtn.addEventListener('click', toggleVoiceRecognition);
+            
+            sendBtn.addEventListener('click', () => {
+                if (textInput.value.trim()) {
+                    processUserInput(textInput.value);
+                    textInput.value = '';
+                }
+            });
+            
+            textInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && textInput.value.trim()) {
+                    processUserInput(textInput.value);
+                    textInput.value = '';
+                }
+            });
+            
+            clearBtn.addEventListener('click', clearConversation);
+            
+            backBtn.addEventListener('click', () => {
+                window.location.href = 'Файловый проводник.html';
+            });
+            
+            notesSaveBtn.addEventListener('click', saveNotes);
+            
+            openInExplorerBtn.addEventListener('click', async () => {
+                if (selectedFile) {
+                    await openSelectedFile();
+                } else {
+                    speak('Пожалуйста, выберите файл для открытия.');
+                }
+            });
+            
+            deleteFileBtn.addEventListener('click', async () => {
+                if (selectedFile) {
+                    if (confirm(`Вы уверены, что хотите удалить "${selectedFile.name}"?`)) {
+                        const handle = fileHandles.get(selectedFile.path);
+                        if (handle) {
+                            try {
+                                await handle.remove();
+                                fileHandles.delete(selectedFile.path);
+                                speak(`Файл "${selectedFile.name}" удален.`);
+                                selectedFile = null;
+                                filePreview.classList.remove('active');
+                                renderFileSystem();
+                            } catch (error) {
+                                console.error('Ошибка удаления файла:', error);
+                                speak('Не удалось удалить файл.');
+                            }
+                        }
+                    }
+                } else {
+                    speak('Пожалуйста, выберите файл для удаления.');
+                }
+            });
+            
+            renameFileBtn.addEventListener('click', async () => {
+                if (selectedFile) {
+                    const newName = prompt('Введите новое имя:', selectedFile.name);
+                    if (newName && newName !== selectedFile.name) {
+                        const handle = fileHandles.get(selectedFile.path);
+                        if (handle) {
+                            try {
+                                await handle.move(newName);
+                                fileHandles.delete(selectedFile.path);
+                                selectedFile.name = newName;
+                                selectedFile.path = selectedFile.path.split('/').slice(0, -1).concat(newName).join('/');
+                                fileHandles.set(selectedFile.path, handle);
+                                speak(`Файл переименован в "${newName}".`);
+                                renderFileSystem();
+                            } catch (error) {
+                                console.error('Ошибка переименования файла:', error);
+                                speak('Не удалось переименовать файл.');
+                            }
+                        }
+                    }
+                } else {
+                    speak('Пожалуйста, выберите файл для переименования.');
+                }
+            });
+            
+            browseFilesBtn.addEventListener('click', async () => {
+                try {
+                    const dirHandle = await window.showDirectoryPicker();
+                    await processDirectory(dirHandle);
+                    renderFileSystem();
+                    speak('Файлы и папки успешно добавлены из проводника.');
+                } catch (error) {
+                    console.error('Ошибка выбора директории:', error);
+                }
+            });
+            
+            refreshFilesBtn.addEventListener('click', () => {
+                renderFileSystem();
+                speak('Список файлов обновлен.');
+            });
+            
+            guessMelodyBtn.addEventListener('click', playGuessMelody);
+            fortuneBtn.addEventListener('click', tellFortune);
+            toastBtn.addEventListener('click', tellToast);
+            poemBtn.addEventListener('click', readPoem);
+            saveSettingsBtn.addEventListener('click', saveSettings);
+            newChatBtn.addEventListener('click', createNewChat);
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+            
+            dropZone.addEventListener('drop', handleDrop, false);
+            
+            noiseSuppressionControl.addEventListener('change', () => {
+                noiseSuppressionEnabled = noiseSuppressionControl.checked;
+                updateNoiseSuppressionIndicator();
+            });
+        }
+        
+        async function openSelectedFile() {
+            if (!selectedFile) return;
+            
+            const handle = fileHandles.get(selectedFile.path);
+            if (handle) {
+                try {
+                    const file = await handle.getFile();
+                    addToRecentFiles(selectedFile);
+                    
+                    if (file.type.startsWith('text/') || file.type === 'application/json') {
+                        const text = await file.text();
+                        mainContent.innerHTML = `<pre>${text}</pre>`;
+                        speak(`Содержимое файла "${selectedFile.name}": ${text.substring(0, 100)}...`);
+                    } else if (file.type.startsWith('image/')) {
+                        const fileURL = URL.createObjectURL(file);
+                        mainContent.innerHTML = `<img src="${fileURL}" style="max-width:100%; max-height:400px;">`;
+                        speak(`Открыто изображение "${selectedFile.name}".`);
+                    } else {
+                        const fileURL = URL.createObjectURL(file);
+                        if (selectedFile.name.endsWith('.docx') || selectedFile.name.endsWith('.pptx')) {
+                            window.open(`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileURL)}`, '_blank');
+                        } else if (selectedFile.name.endsWith('.exe')) {
+                            if (confirm('Вы уверены, что хотите запустить исполняемый файл? Это может быть опасно.')) {
+                                window.open(fileURL, '_blank');
+                            }
+                        } else {
+                            window.open(fileURL, '_blank');
+                        }
+                        speak(`Файл "${selectedFile.name}" открыт в новом окне.`);
+                    }
+                } catch (error) {
+                    console.error('Ошибка открытия файла:', error);
+                    speak('Не удалось открыть файл.');
+                }
+            }
+        }
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        function highlight() {
+            dropZone.classList.add('highlight');
+        }
+        
+        function unhighlight() {
+            dropZone.classList.remove('highlight');
+        }
+        
+        async function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const items = [...dt.items];
+            
+            for (const item of items) {
+                if (item.kind === 'file') {
+                    try {
+                        const handle = await item.getAsFileSystemHandle();
+                        if (handle) {
+                            fileHandles.set(handle.name, handle);
+                            if (handle.kind === 'directory') {
+                                await processDirectory(handle);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Ошибка обработки файла:', error);
+                    }
+                }
+            }
+            
+            renderFileSystem();
+            speak('Файлы и папки успешно добавлены.');
+        }
+        
+        async function processDirectory(directoryHandle, path = []) {
+            for await (const entry of directoryHandle.values()) {
+                const currentPath = [...path, directoryHandle.name].join('/');
+                fileHandles.set(`${currentPath}/${entry.name}`, entry);
+                if (entry.kind === 'directory') {
+                    await processDirectory(entry, [...path, directoryHandle.name]);
+                }
+            }
+        }
+        
+        function toggleVoiceRecognition() {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+        
+        function resetVoiceRecognition() {
+            isListening = false;
+            micBtn.classList.remove('active');
+            waves.style.display = 'none';
+        }
+        
+        function animateWaves() {
+            if (isListening) {
+                const waveElements = document.querySelectorAll('.wave');
+                waveElements.forEach(wave => {
+                    const randomHeight = Math.floor(Math.random() * 25) + 5;
+                    wave.style.height = `${randomHeight}px`;
+                });
+                requestAnimationFrame(animateWaves);
+            }
+        }
+        
+        function clearConversation() {
+            if (confirm('Вы уверены, что хотите очистить всю историю беседы?')) {
+                conversationHistory = [];
+                chats[activeChatId].history = [];
+                saveAllData();
+                renderConversation();
+                
+                setTimeout(() => {
+                    const welcomeMessage = 'Привет! Я ваш умный голосовой помощник. Чем могу помочь?';
+                    addMessage('assistant', welcomeMessage, true);
+                    speak(welcomeMessage);
+                }, 500);
+            }
+        }
+        
+        function addMessage(sender, text, isInitial = false) {
+            if (isInitial && conversationHistory.length > 0) return;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(`${sender}-message`);
+            
+            const formattedText = text.split('\n').map(paragraph => {
+                return paragraph.trim() ? `<p>${paragraph}</p>` : '';
+            }).join('');
+            
+            messageDiv.innerHTML = formattedText;
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            
+            conversationHistory.push({
+                sender: sender,
+                text: text,
+                timestamp: new Date().toISOString()
+            });
+            
+            chats[activeChatId].history = conversationHistory;
+            saveAllData();
+        }
+        
+        function showTypingIndicator() {
+            if (isTyping) return;
+            
+            isTyping = true;
+            const typingDiv = document.createElement('div');
+            typingDiv.classList.add('typing-indicator');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            chatArea.appendChild(typingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+        
+        function hideTypingIndicator() {
+            isTyping = false;
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+        
+        function speak(text) {
+            if (isAssistantSpeaking || lastSpokenMessage === text) return;
+            
+            lastSpokenMessage = text;
+            isAssistantSpeaking = true;
+            showTypingIndicator();
+            
+            setTimeout(() => {
+                hideTypingIndicator();
+                addMessage('assistant', text);
+                
+                speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ru-RU';
+                utterance.rate = parseFloat(rateControl.value);
+                utterance.pitch = 1;
+                utterance.volume = parseFloat(volumeControl.value);
+                
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    const russianVoices = voices.filter(v => v.lang.includes('ru'));
+                    if (russianVoices.length > 0) {
+                        utterance.voice = russianVoices.reduce((best, current) => 
+                            current.name.includes('Microsoft') || current.name.includes('Google') ? current : best
+                        );
+                    }
+                }
+                
+                utterance.onend = () => {
+                    isAssistantSpeaking = false;
+                    lastSpokenMessage = '';
+                };
+                
+                utterance.onerror = () => {
+                    isAssistantSpeaking = false;
+                    lastSpokenMessage = '';
+                };
+                
+                speechSynthesis.speak(utterance);
+            }, 800);
+        }
+        
+        function processUserInput(input) {
+            if (!input.trim()) return;
+            
+            addMessage('user', input);
+            processCommandWithAI(input);
+        }
+        
+        async function processCommandWithAI(input) {
+            showTypingIndicator();
+            
+            try {
+                const context = conversationHistory
+                    .slice(-6)
+                    .map(msg => `${msg.sender === 'user' ? 'Пользователь' : 'Ассистент'}: ${msg.text}`)
+                    .join('\n');
+                
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                const response = await generateAIResponse(input, context);
+                speak(response);
+                
+            } catch (error) {
+                console.error('Ошибка обработки команды:', error);
+                hideTypingIndicator();
+                speak('Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже.');
+            }
+        }
+        
+        async function generateAIResponse(input, context) {
+            const lowerInput = input.toLowerCase();
+            
+            if (/(привет|здравствуй)/i.test(lowerInput)) {
+                return 'Привет! Чем могу помочь?';
+            }
+            else if (/(пока|до свидания)/i.test(lowerInput)) {
+                return 'До свидания! Буду рад помочь вам снова.';
+            }
+            else if (/(открой доступ|покажи файлы|найди файл|найди папку)/i.test(lowerInput)) {
+                openFileExplorer();
+                return handleFileCommands(input);
+            }
+            else if (/(заметки|записки|запиши)/i.test(lowerInput)) {
+                return handleNotesCommands(input);
+            }
+            else if (/(развлечения|игра|мелодия|гадание|тост|стих)/i.test(lowerInput)) {
+                return handleEntertainmentCommands(input);
+            }
+            else if (/(настройки|параметры)/i.test(lowerInput)) {
+                openSettingsExplorer();
+                return 'Открываю настройки. Здесь вы можете настроить громкость, скорость речи и тему интерфейса.';
+            }
+            else if (/(как дела|как ты|как жизнь)/i.test(lowerInput)) {
+                return 'У меня всё отлично! Готов помочь вам с любыми вопросами.';
+            }
+            else if (/(спасибо|благодарю)/i.test(lowerInput)) {
+                return 'Пожалуйста! Обращайтесь, если понадобится ещё помощь.';
+            }
+            else if (/(что ты умеешь|твои функции)/i.test(lowerInput)) {
+                return 'Я могу находить файлы и папки на вашем компьютере, создавать и просматривать заметки, управлять файлами, играть в "угадай мелодию", гадать, находить тосты, читать стихи и многое другое!';
+            }
+            else if (/(покажи все папки|найди все папки|список папок)/i.test(lowerInput)) {
+                const folders = [];
+                fileHandles.forEach((handle, path) => {
+                    if (handle.kind === 'directory') {
+                        folders.push(path.split('/').pop());
+                    }
+                });
+                
+                if (folders.length > 0) {
+                    let response = 'Вот все доступные папки:\n';
+                    folders.forEach(folder => {
+                        response += `- ${folder}\n`;
+                    });
+                    return response + 'Скажите "открыть [название папки]" для просмотра содержимого.';
+                } else {
+                    return 'На вашем компьютере не найдено папок.';
+                }
+            }
+            else if (/(открой|покажи) (.+)/i.test(lowerInput)) {
+                const match = input.match(/(открой|покажи) (.+)/i);
+                if (match && match[2]) {
+                    const itemName = match[2].trim();
+                    let foundHandle = null;
+                    let foundPath = null;
+                    
+                    fileHandles.forEach((handle, path) => {
+                        if (path.includes(itemName)) {
+                            foundHandle = handle;
+                            foundPath = path;
+                        }
+                    });
+                    
+                    if (foundHandle) {
+                        selectedFile = {
+                            name: foundPath.split('/').pop(),
+                            path: foundPath,
+                            type: foundHandle.kind === 'file' ? 'file' : 'directory'
+                        };
+                        
+                        if (foundHandle.kind === 'directory') {
+                            return `Открываю папку "${itemName}". Вы можете просмотреть её содержимое.`;
+                        } else {
+                            openSelectedFile();
+                            return `Открываю файл "${itemName}".`;
+                        }
+                    } else {
+                        return `Файл или папка "${itemName}" не найдены.`;
+                    }
+                }
+            }
+            else if (/(удалить|удали) (.+)/i.test(lowerInput)) {
+                const match = input.match(/(удалить|удали) (.+)/i);
+                if (match && match[2]) {
+                    const itemName = match[2].trim();
+                    let foundHandle = null;
+                    let foundPath = null;
+                    
+                    fileHandles.forEach((handle, path) => {
+                        if (path.includes(itemName)) {
+                            foundHandle = handle;
+                            foundPath = path;
+                        }
+                    });
+                    
+                    if (foundHandle) {
+                        selectedFile = {
+                            name: foundPath.split('/').pop(),
+                            path: foundPath,
+                            type: foundHandle.kind === 'file' ? 'file' : 'directory'
+                        };
+                        
+                        if (confirm(`Вы уверены, что хотите удалить "${selectedFile.name}"?`)) {
+                            try {
+                                await foundHandle.remove();
+                                fileHandles.delete(foundPath);
+                                speak(`Файл "${selectedFile.name}" удален.`);
+                                selectedFile = null;
+                                filePreview.classList.remove('active');
+                                renderFileSystem();
+                                return `Файл "${itemName}" успешно удален.`;
+                            } catch (error) {
+                                console.error('Ошибка удаления файла:', error);
+                                return 'Не удалось удалить файл.';
+                            }
+                        } else {
+                            return 'Удаление отменено.';
+                        }
+                    } else {
+                        return `Файл или папка "${itemName}" не найдены.`;
+                    }
+                }
+            }
+            else if (/(переименовать|переименуй) (.+)/i.test(lowerInput)) {
+                const match = input.match(/(переименовать|переименуй) (.+)/i);
+                if (match && match[2]) {
+                    const parts = match[2].split(' в ');
+                    if (parts.length === 2) {
+                        const oldName = parts[0].trim();
+                        const newName = parts[1].trim();
+                        
+                        let foundHandle = null;
+                        let foundPath = null;
+                        
+                        fileHandles.forEach((handle, path) => {
+                            if (path.includes(oldName)) {
+                                foundHandle = handle;
+                                foundPath = path;
+                            }
+                        });
+                        
+                        if (foundHandle) {
+                            try {
+                                await foundHandle.move(newName);
+                                fileHandles.delete(foundPath);
+                                
+                                const newPath = foundPath.split('/').slice(0, -1).concat(newName).join('/');
+                                fileHandles.set(newPath, foundHandle);
+                                
+                                renderFileSystem();
+                                return `Файл переименован из "${oldName}" в "${newName}".`;
+                            } catch (error) {
+                                console.error('Ошибка переименования файла:', error);
+                                return 'Не удалось переименовать файл.';
+                            }
+                        } else {
+                            return `Файл или папка "${oldName}" не найдены.`;
+                        }
+                    } else {
+                        return 'Пожалуйста, укажите новое имя в формате: "переименовать старое_имя в новое_имя"';
+                    }
+                }
+            }
+            else if (/(тип|что это) (.+)/i.test(lowerInput)) {
+                const match = input.match(/(тип|что это) (.+)/i);
+                if (match && match[2]) {
+                    const itemName = match[2].trim();
+                    let foundHandle = null;
+                    let foundPath = null;
+                    
+                    fileHandles.forEach((handle, path) => {
+                        if (path.includes(itemName)) {
+                            foundHandle = handle;
+                            foundPath = path;
+                        }
+                    });
+                    
+                    if (foundHandle) {
+                        const fileName = foundPath.split('/').pop();
+                        const extension = fileName.split('.').pop().toLowerCase();
+                        const fileType = fileTypes[extension] || 'неизвестный тип файла';
+                        
+                        if (foundHandle.kind === 'directory') {
+                            return `"${fileName}" - это папка.`;
+                        } else {
+                            return `"${fileName}" - это ${fileType}.`;
+                        }
+                    } else {
+                        return `Файл или папка "${itemName}" не найдены.`;
+                    }
+                }
+            }
+            else if (/(обновить)/i.test(lowerInput)) {
+                renderFileSystem();
+                return 'Список файлов обновлен.';
+            }
+            else if (/(история|рекомендации)/i.test(lowerInput)) {
+                if (recentFiles.length > 0) {
+                    let response = 'Недавно открытые файлы:\n';
+                    recentFiles.forEach(file => {
+                        response += `- ${file.name}\n`;
+                    });
+                    return response + 'Вы можете выбрать любой из них для открытия.';
+                } else {
+                    return 'Вы еще не открывали файлы. История пуста.';
+                }
+            }
+            else if (/(новый чат)/i.test(lowerInput)) {
+                createNewChat();
+                return 'Создан новый чат. Чем могу помочь?';
+            }
+            else {
+                return await getOpenAIResponse(input, context);
+            }
+        }
+        
+        async function getOpenAIResponse(input, context) {
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-3.5-turbo",
+                        messages: [
+                            {
+                                role: "system",
+                                content: "Ты умный голосовой помощник. Отвечай кратко и по делу."
+                            },
+                            {
+                                role: "user",
+                                content: input
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 150
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка запроса к OpenAI API');
+                }
+                
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('Ошибка OpenAI:', error);
+                return `Я понял ваш запрос: "${input}". К сожалению, не могу обработать этот запрос прямо сейчас.`;
+            }
+        }
+        
+        function handleFileCommands(command) {
+            if (/(найди файл|найди папку)/i.test(command)) {
+                const searchQuery = command.replace(/(найди файл|найди папку)/i, '').trim();
+                if (searchQuery) {
+                    const results = [];
+                    fileHandles.forEach((handle, path) => {
+                        if (path.toLowerCase().includes(searchQuery.toLowerCase())) {
+                            results.push(path);
+                        }
+                    });
+                    
+                    if (results.length > 0) {
+                        let response = `Найдены следующие совпадения по запросу "${searchQuery}":\n`;
+                        results.forEach(item => {
+                            response += `- ${item}\n`;
+                        });
+                        response += 'Скажите "открыть [название]" для открытия файла или папки.';
+                        return response;
+                    } else {
+                        return `По запросу "${searchQuery}" ничего не найдено.`;
+                    }
+                } else {
+                    return 'Пожалуйста, укажите, какой файл или папку вы хотите найти.';
+                }
+            }
+            return 'Команда для работы с файлами не распознана. Доступ к файлам уже открыт.';
+        }
+        
+        function handleNotesCommands(command) {
+            if (/(покажи заметки|открой заметки)/i.test(command)) {
+                openNotesExplorer();
+                return 'Открываю ваши заметки. Вы можете просматривать и редактировать их здесь.';
+            }
+            else if (/(сохрани заметку|запиши заметку)/i.test(command)) {
+                const noteContent = command.replace(/(сохрани заметку|запиши заметку)/i, '').trim();
+                if (noteContent) {
+                    notesArea.value = noteContent;
+                    saveNotes();
+                    return 'Заметка сохранена.';
+                } else {
+                    return 'Пожалуйста, укажите текст заметки.';
+                }
+            }
+            return 'Команда для работы с заметками не распознана. Скажите "открыть заметки" для просмотра.';
+        }
+        
+        function handleEntertainmentCommands(command) {
+            if (/(развлечения|игра|мелодия|гадание|тост|стих)/i.test(command)) {
+                openEntertainmentExplorer();
+                return 'Открываю раздел развлечений. Здесь вы можете играть в "угадай мелодию", гадать, найти тост или послушать стих.';
+            }
+            return 'Команда для развлечений не распознана. Скажите "развлечения" для открытия меню.';
+        }
+        
+        function openFileExplorer() {
+            fileExplorer.classList.add('active-window');
+            notesExplorer.classList.remove('active-window');
+            entertainmentExplorer.classList.remove('active-window');
+            settingsExplorer.classList.remove('active-window');
+            renderFileSystem();
+        }
+        
+        function openNotesExplorer() {
+            notesExplorer.classList.add('active-window');
+            fileExplorer.classList.remove('active-window');
+            entertainmentExplorer.classList.remove('active-window');
+            settingsExplorer.classList.remove('active-window');
+        }
+        
+        function openEntertainmentExplorer() {
+            entertainmentExplorer.classList.add('active-window');
+            fileExplorer.classList.remove('active-window');
+            notesExplorer.classList.remove('active-window');
+            settingsExplorer.classList.remove('active-window');
+        }
+        
+        function openSettingsExplorer() {
+            settingsExplorer.classList.add('active-window');
+            fileExplorer.classList.remove('active-window');
+            notesExplorer.classList.remove('active-window');
+            entertainmentExplorer.classList.remove('active-window');
+        }
+        
+        function renderFileSystem() {
+            fileExplorerContent.innerHTML = '';
+            
+            const groupedFiles = {};
+            
+            fileHandles.forEach((handle, path) => {
+                const parts = path.split('/');
+                let currentLevel = groupedFiles;
+                
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    if (!currentLevel[part]) {
+                        currentLevel[part] = {};
+                    }
+                    currentLevel = currentLevel[part];
+                }
+            });
+            
+            renderFileSystemLevel(groupedFiles, fileExplorerContent);
+        }
+        
+        function renderFileSystemLevel(level, container, path = []) {
+            for (const [name, content] of Object.entries(level)) {
+                if (Object.keys(content).length > 0) {
+                    const folderElement = document.createElement('div');
+                    folderElement.className = 'folder-item';
+                    
+                    const toggleSpan = document.createElement('span');
+                    toggleSpan.className = 'folder-toggle';
+                    toggleSpan.innerHTML = '▶';
+                    toggleSpan.onclick = (e) => {
+                        e.stopPropagation();
+                        toggleSpan.classList.toggle('expanded');
+                        const contents = folderElement.nextElementSibling;
+                        contents.classList.toggle('expanded');
+                    };
+                    
+                    folderElement.appendChild(toggleSpan);
+                    folderElement.innerHTML += ` 📁 ${name}`;
+                    
+                    folderElement.onclick = () => {
+                        selectedFile = {
+                            name: name,
+                            path: [...path, name].join('/'),
+                            type: 'directory'
+                        };
+                        speak(`Выбрана папка "${name}". Вы можете открыть её в проводнике.`);
+                    };
+                    
+                    container.appendChild(folderElement);
+                    
+                    const subContainer = document.createElement('div');
+                    subContainer.className = 'folder-contents';
+                    renderFileSystemLevel(content, subContainer, [...path, name]);
+                    container.appendChild(subContainer);
+                } else {
+                    const fileElement = document.createElement('div');
+                    fileElement.className = 'file-item';
+                    
+                    const extension = name.split('.').pop().toLowerCase();
+                    const icon = fileIcons[extension] || '📄';
+                    
+                    fileElement.innerHTML = `${icon} ${name}`;
+                    fileElement.onclick = async () => {
+                        selectedFile = {
+                            name: name,
+                            path: [...path, name].join('/'),
+                            type: 'file'
+                        };
+                        
+                        const handle = fileHandles.get(selectedFile.path);
+                        if (handle) {
+                            try {
+                                const file = await handle.getFile();
+                                
+                                if (file.type.startsWith('text/') || file.type === 'application/json') {
+                                    const text = await file.text();
+                                    filePreviewContent.innerHTML = `<pre>${text}</pre>`;
+                                    filePreview.classList.add('active');
+                                } else {
+                                    filePreviewContent.innerHTML = `<p>Просмотр содержимого недоступен для этого типа файла</p>`;
+                                    filePreview.classList.add('active');
+                                }
+                            } catch (error) {
+                                console.error('Ошибка чтения файла:', error);
+                                filePreviewContent.innerHTML = `<p>Не удалось прочитать содержимое файла</p>`;
+                                filePreview.classList.add('active');
+                            }
+                        }
+                        
+                        speak(`Выбран файл "${name}". Вы можете открыть его в проводнике, удалить или переименовать.`);
+                    };
+                    container.appendChild(fileElement);
+                }
+            }
+        }
+        
+        function saveNotes() {
+            chats[activeChatId].notes = notesArea.value;
+            saveAllData();
+            speak('Заметки сохранены.');
+        }
+        
+        function playGuessMelody() {
+            const melodies = ["Yesterday", "Smells Like Teen Spirit", "Bohemian Rhapsody", "Imagine"];
+            const randomMelody = melodies[Math.floor(Math.random() * melodies.length)];
+            speak(`Угадайте мелодию: "${randomMelody}". Это The Beatles, Nirvana, Queen или John Lennon?`);
+        }
+        
+        function tellFortune() {
+            const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+            speak(`Мое предсказание для вас: ${randomFortune}`);
+        }
+        
+        function tellToast() {
+            const randomToast = toasts[Math.floor(Math.random() * toasts.length)];
+            speak(`Вот хороший тост: ${randomToast}`);
+        }
+        
+        function readPoem() {
+            const randomPoem = poems[Math.floor(Math.random() * poems.length)];
+            speak(`Вот стихотворение: ${randomPoem}`);
+        }
+        
+        window.addEventListener('load', () => {
+            speechSynthesis.onvoiceschanged = initApp;
+            if (speechSynthesis.getVoices().length > 0) {
+                initApp();
+            }
+        });
+    </script>
+</body>
+</html>
